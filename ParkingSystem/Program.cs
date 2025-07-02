@@ -2,6 +2,7 @@
 using ParkingSystem.Common;
 using System.Text.RegularExpressions;
 using System.Reflection.Metadata;
+using System.Linq.Expressions;
 
 namespace ParkingSystem
 {
@@ -28,7 +29,7 @@ namespace ParkingSystem
                 Console.WriteLine("7 - System Settings");
                 Console.WriteLine("0 - Close");
 
-                string option = Console.ReadLine();
+                string? option = Console.ReadLine();
 
                 switch (option)
                 {
@@ -36,6 +37,7 @@ namespace ParkingSystem
                         registerCustomer();
                         break;
                     case "2":
+                        registerVehicle();
                         break;
                     case "3":
                         break;
@@ -51,7 +53,7 @@ namespace ParkingSystem
                         Environment.Exit(0);
                         break;
                     default:
-                        Console.WriteLine("Opção inválida. Escolha Novamente.");
+                        Console.WriteLine("Invalid Option. Try Again.");
                         Console.ReadKey();
                         break;
                 }
@@ -66,7 +68,7 @@ namespace ParkingSystem
             Console.WriteLine("--- Register a Customer ---");
             Console.WriteLine("Type the customer name");
             Console.Write("Name: ");
-            string customerName = Console.ReadLine();
+            string? customerName = Console.ReadLine();
 
             while (string.IsNullOrEmpty(customerName) || customerName.Length < 3)
             {
@@ -77,25 +79,115 @@ namespace ParkingSystem
 
             Console.WriteLine("Type the customer document");
             Console.Write("Document:");
-            string document = Console.ReadLine();
+            string? customerDocument = Console.ReadLine();
 
-            while (!validateDocument(document))
+            while (!validateDocument(customerDocument))
             {
-                Console.WriteLine($"The Document {document} is invalid, type again");
+                Console.WriteLine($"The Document {customerDocument} is invalid, type again");
                 Console.Write("Document: ");
-                document = Console.ReadLine();
+                customerDocument = Console.ReadLine();
             }
 
             Console.WriteLine("Type the customer Phone Number");
             Console.Write("Phone Number: ");
-            string phoneNumber = Console.ReadLine();
+            string? customerPhoneNumber = Console.ReadLine();
 
-            while (!validatePlate(phoneNumber))
+            while (!validatePlate(customerPhoneNumber))
             {
-                Console.WriteLine($"The Phone {phoneNumber} is invalid, type again");
+                Console.WriteLine($"The Phone {customerPhoneNumber} is invalid, type again");
                 Console.Write("Phone Number: ");
-                phoneNumber = Console.ReadLine();
+                customerPhoneNumber = Console.ReadLine();
             }
+
+            Console.WriteLine("Type the customer's email");
+            Console.Write("Email: ");
+            string? customerEmail = Console.ReadLine();
+
+            while (!validateEmail(customerEmail))
+            {
+                Console.WriteLine($"The Email {customerEmail} is invalid, type again");
+                Console.Write("Email: ");
+                customerEmail = Console.ReadLine();
+            }
+
+            ParkingManager.registerCustomer(customerName, customerDocument, customerPhoneNumber, customerEmail);
+        }
+
+        static void registerVehicle()
+        {
+            Console.Clear();
+
+            Console.WriteLine("--- Register a Vehicle ---");
+            Console.WriteLine("Type the Owner ID");
+
+            int customerID = 0;
+            bool validCustomerID = false;
+            string? customerName = " ";
+            
+            while (!validCustomerID)
+            {
+                Console.Write("Customer ID: ");
+                try
+                {
+                    validCustomerID = int.TryParse(Console.ReadLine(), out customerID);
+                    //Consultar ID no banco e verificar o nome do customer que tem esse nome. Passar para o customerName;
+                    customerName = ParkingManager.getCustomerName($"SELECT * FROM customer WHERE idCustomer = {customerID}");
+                    Console.WriteLine($"This vehicle will belong to {customerName}");
+                    validCustomerID = true;
+                }
+                catch
+                {
+                    Console.WriteLine("This Customer ID doesn't exist. Try Again");
+                    validCustomerID = false;
+                }
+            }
+
+            Console.WriteLine("Now, type the Vehicle License Plate");
+            Console.Write("License Plate: ");
+
+            string? licensePlate = Console.ReadLine();
+
+            //O usuário digita a License Plate do veículo;  
+            while (!validateLicensePlate(licensePlate))
+            {
+                Console.WriteLine($"This License plate \"{licensePlate}\" is invalid. Try Again.");
+                licensePlate = Console.ReadLine();
+            }
+
+            Console.Write("Vehicle Maker: ");
+            string? vehicleMaker = Console.ReadLine();
+
+            //O usuário digita a fabricante do veículo;
+            while (vehicleMaker == " ")
+            {
+                Console.WriteLine("This field cannot be empty, try again.");
+            }
+
+            //O usuário digita o modelo do veículo;
+            Console.Write("Vehicle model: ");
+            string? vehicleModel = Console.ReadLine();
+
+            while (vehicleModel == " ")
+            {
+                Console.WriteLine("This field cannot be empty, try again.");
+            }
+
+            //O usuário digita a cor do veículo;
+            Console.Write("Vehicle color: ");
+            string? vehicleColor = Console.ReadLine();
+
+            while (vehicleColor == " ")
+            {
+                Console.WriteLine("This field cannot be empty, try again.");
+            }
+
+            Console.WriteLine("Congratulations! You registered a vehicle!\n" +
+                                $"Customer Name: {customerName}\n" +
+                                $"Vehicle License Plate: {licensePlate}\n" +
+                                $"Vehicle: {vehicleColor} {vehicleMaker} {vehicleModel}"
+                                );
+
+            ParkingManager.registerVehicle(customerID, licensePlate, vehicleMaker, vehicleModel, vehicleColor);                    
         }
 
         static bool validatePlate(string phoneNumber)
@@ -108,6 +200,17 @@ namespace ParkingSystem
         {
             string validDocument = @"^\d{3}.?\d{3}.?\d{3}-?\d{2}$";
             return Regex.IsMatch(documentNumber, validDocument);
+        }
+
+        static bool validateEmail(string email)
+        {
+            string validEmail = @"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$";
+            return Regex.IsMatch(email, validEmail);
+        }
+        static bool validateLicensePlate(string licensePlate) {
+            string validLicensePlateMercosul = @"^[A-Z]{3}[0-9][A-Z][0-9]{2}$";
+            string validLicensePlateOld = @"^[A-Z]{3}-?[0-9]{4}$";
+            return Regex.IsMatch(licensePlate, validLicensePlateMercosul) || Regex.IsMatch(licensePlate, validLicensePlateOld);
         }
     }
 }
