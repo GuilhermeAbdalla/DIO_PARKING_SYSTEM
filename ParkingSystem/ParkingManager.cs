@@ -100,6 +100,46 @@ namespace ParkingSystem
 
         }
 
+        public static void printAllCustomers()
+        {
+            List<Customer> customers = new List<Customer>();
+            string sql = "SELECT * FROM customer";
+            try
+            {
+                MySqlCommand command = new MySqlCommand(sql, connection);
+                connection.Open();
+
+                MySqlDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    Customer customer = new Customer();
+                    customer.idCustomer = reader.GetInt32(0);
+                    customer.nameCustomer = reader.GetString(1);
+                    customer.docCustomer = reader.GetString(2);
+                    customer.phoneCustomer = reader.GetString(3);
+                    customer.emailCustomer = reader.GetString(4);
+                    customer.activeSituation = reader.GetInt32(5);
+
+                    customers.Add(customer);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            finally
+            {
+                connection.Close();
+            }
+            foreach (Customer cust in customers)
+            {
+                Console.WriteLine(cust.ToString());
+            }
+
+        }
+
         static void executeQuery(string sql)
         {
             try

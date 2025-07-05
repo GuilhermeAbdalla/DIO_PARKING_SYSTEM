@@ -198,7 +198,10 @@ namespace ParkingSystem
             Console.Clear();
 
             Console.WriteLine("--- List of Customers ---");
-            Console.WriteLine("ID\t\tNAME\t\tCPF\t\t\tPHONE\t\tEMAIL\t\tSITUATION");    
+            Console.WriteLine("ID\t\tNAME\t\tCPF\t\t\tPHONE\t\tEMAIL\t\tSITUATION");
+            ParkingManager.printAllCustomers();
+            Console.ReadKey();
+            Console.Clear();
         }
         static void listVehicles()
         {
