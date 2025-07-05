@@ -20,6 +20,7 @@ namespace ParkingSystem
 
             while (showMenu)
             {
+                Console.Clear();
                 Console.WriteLine("1 - Register a Customer");
                 Console.WriteLine("2 - Register a Vehicle");
                 Console.WriteLine("3 - Vehicle Entry");
@@ -44,8 +45,10 @@ namespace ParkingSystem
                     case "4":
                         break;
                     case "5":
+                        listCustomers();
                         break;
                     case "6":
+                        listVehicles();
                         break;
                     case "7":
                         break;
@@ -190,6 +193,23 @@ namespace ParkingSystem
             ParkingManager.registerVehicle(customerID, licensePlate, vehicleMaker, vehicleModel, vehicleColor);                    
         }
 
+        static void listCustomers()
+        {
+            Console.Clear();
+
+            Console.WriteLine("--- List of Customers ---");
+            Console.WriteLine("ID\t\tNAME\t\tCPF\t\t\tPHONE\t\tEMAIL\t\tSITUATION");    
+        }
+        static void listVehicles()
+        {
+            Console.Clear();
+
+            Console.WriteLine("--- List of Vehicles ---");
+            Console.WriteLine("ID\t\tOWNER\t\tLICENSE PLATE\t\t\tMAKER\t\tMODEL\t\tCOLOR");
+            ParkingManager.printAllVehicles();
+            Console.ReadKey();
+            Console.Clear();
+        }
         static bool validatePlate(string phoneNumber)
         {
             string validPhone = @"^\(?\d{2}\)?\s?(\d{1})?\d{4}-?\d{4}$";
