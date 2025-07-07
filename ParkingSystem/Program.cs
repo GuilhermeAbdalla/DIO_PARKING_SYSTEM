@@ -1,15 +1,11 @@
-﻿using System;
-using ParkingSystem.Common;
-using System.Text.RegularExpressions;
-using System.Reflection.Metadata;
-using System.Linq.Expressions;
+﻿using System.Text.RegularExpressions;
 
 namespace ParkingSystem
 {
     class Program
     {
         static bool showMenu;
-        static void Main(string[] args)
+        static void Main()
 
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
@@ -35,22 +31,25 @@ namespace ParkingSystem
                 switch (option)
                 {
                     case "1":
-                        registerCustomer();
+                        RegisterCustomer();
                         break;
                     case "2":
-                        registerVehicle();
+                        RegisterVehicle();
                         break;
                     case "3":
+                        RegisterVehicleEntry();
                         break;
                     case "4":
+                        RegisterVehicleExit();
                         break;
                     case "5":
-                        listCustomers();
+                        ListCustomers();
                         break;
                     case "6":
-                        listVehicles();
+                        ListVehicles();
                         break;
                     case "7":
+                        SetSystemSettings();
                         break;
                     case "0":
                         Environment.Exit(0);
@@ -64,7 +63,7 @@ namespace ParkingSystem
             }
         }
 
-        static void registerCustomer()
+        static void RegisterCustomer()
         {
             Console.Clear();
 
@@ -116,7 +115,7 @@ namespace ParkingSystem
             ParkingManager.registerCustomer(customerName, customerDocument, customerPhoneNumber, customerEmail);
         }
 
-        static void registerVehicle()
+        static void RegisterVehicle()
         {
             Console.Clear();
 
@@ -126,7 +125,7 @@ namespace ParkingSystem
             int customerID = 0;
             bool validCustomerID = false;
             string? customerName = " ";
-            
+
             while (!validCustomerID)
             {
                 Console.Write("Customer ID: ");
@@ -190,10 +189,71 @@ namespace ParkingSystem
                                 $"Vehicle: {vehicleColor} {vehicleMaker} {vehicleModel}"
                                 );
 
-            ParkingManager.registerVehicle(customerID, licensePlate, vehicleMaker, vehicleModel, vehicleColor);                    
+            ParkingManager.registerVehicle(customerID, licensePlate, vehicleMaker, vehicleModel, vehicleColor);
         }
 
-        static void listCustomers()
+        static void RegisterVehicleEntry()
+        {
+            Console.WriteLine("Type the Vehicle ID to Register the entry");
+            int typedVehicleId = 0;
+
+            bool idIsNumber = int.TryParse(Console.ReadLine(), out typedVehicleId);
+            bool vehicleExists = ParkingManager.verifyIfVehicleExistsinBd(typedVehicleId);
+            while (!idIsNumber || !vehicleExists)
+            {
+                Console.WriteLine("Invalid ID, type again");
+                idIsNumber = int.TryParse(Console.ReadLine(), out typedVehicleId);
+                vehicleExists = ParkingManager.verifyIfVehicleExistsinBd(typedVehicleId);
+            }
+
+            bool hasEntryWithoutExit = ParkingManager.verifyIfHasEntry(typedVehicleId);
+            if (hasEntryWithoutExit)
+            {
+                Console.WriteLine("This vehicle has entry without exit");
+                Console.WriteLine("Press any key to return to select menu");
+                Console.ReadKey();
+                return;
+            }
+            else
+            {
+                Console.WriteLine("You can entry this vehicle");
+            }
+            Console.WriteLine("Press any key to entry with the vehicle");
+            Console.ReadKey();
+
+            ParkingManager.registerEntry(typedVehicleId);
+        }
+
+        static void RegisterVehicleExit()
+        {
+            Console.WriteLine("Type the Vehicle ID to Register the exit");
+            int typedVehicleId = 0;
+
+            bool idIsNumber = int.TryParse(Console.ReadLine(), out typedVehicleId);
+            bool vehicleExists = ParkingManager.verifyIfVehicleExistsinBd(typedVehicleId);
+            while (!idIsNumber || !vehicleExists)
+            {
+                Console.WriteLine("Invalid ID, type again");
+                idIsNumber = int.TryParse(Console.ReadLine(), out typedVehicleId);
+                vehicleExists = ParkingManager.verifyIfVehicleExistsinBd(typedVehicleId);
+            }
+
+            bool hasEntryWithoutExit = ParkingManager.verifyIfHasEntry(typedVehicleId);
+            if (hasEntryWithoutExit)
+            {
+                Console.WriteLine("You can Register the vehicle exit");            
+            }
+            else
+            {
+                Console.WriteLine("You can't exit with a vehicle that has no entry");
+                Console.ReadKey();
+                return;
+            }
+
+            ParkingManager.registerExit(typedVehicleId);
+        }
+
+        static void ListCustomers()
         {
             Console.Clear();
 
@@ -203,7 +263,7 @@ namespace ParkingSystem
             Console.ReadKey();
             Console.Clear();
         }
-        static void listVehicles()
+        static void ListVehicles()
         {
             Console.Clear();
 
@@ -213,6 +273,25 @@ namespace ParkingSystem
             Console.ReadKey();
             Console.Clear();
         }
+
+        static void SetSystemSettings()
+        {
+            Console.WriteLine("Type the new price per hour for parking [Format: 00.00]");
+
+            decimal newPricePerHour;
+            bool canBePriced = decimal.TryParse(Console.ReadLine(), out newPricePerHour);
+
+            while (!canBePriced)
+            {
+                Console.WriteLine("Invalid Price, type again");
+                canBePriced = decimal.TryParse(Console.ReadLine(), out newPricePerHour);
+            }
+
+            ParkingManager.setSystemSettings(newPricePerHour);
+            Console.WriteLine($"The new price is: ${newPricePerHour}/hr");
+            Console.ReadKey();
+        }
+
         static bool validatePlate(string phoneNumber)
         {
             string validPhone = @"^\(?\d{2}\)?\s?(\d{1})?\d{4}-?\d{4}$";
@@ -230,10 +309,16 @@ namespace ParkingSystem
             string validEmail = @"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$";
             return Regex.IsMatch(email, validEmail);
         }
-        static bool validateLicensePlate(string licensePlate) {
+        static bool validateLicensePlate(string licensePlate)
+        {
             string validLicensePlateMercosul = @"^[A-Z]{3}[0-9][A-Z][0-9]{2}$";
             string validLicensePlateOld = @"^[A-Z]{3}-?[0-9]{4}$";
             return Regex.IsMatch(licensePlate, validLicensePlateMercosul) || Regex.IsMatch(licensePlate, validLicensePlateOld);
+        }
+        static bool validateID(string id)
+        {
+            string validId = @"^\d";
+            return Regex.IsMatch(id, validId);
         }
     }
 }

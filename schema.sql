@@ -1,3 +1,5 @@
+CREATE DATABASE IF NOT EXISTS db_parkingsystem;
+
 CREATE TABLE IF NOT EXISTS customer(
     idCustomer INT NOT NULL AUTO_INCREMENT,
     nameCustomer VARCHAR(150),
@@ -29,5 +31,11 @@ CREATE TABLE IF NOT EXISTS entryexit(
     FOREIGN KEY (idVehicle) REFERENCES vehicle(idVehicle)
 );
 
-SELECT *
-from entryexit
+CREATE TABLE IF NOT EXISTS systemSettings(
+    settingDescription VARCHAR(255) NOT NULL,
+    settingValue VARCHAR(255),
+    PRIMARY KEY(settingDescription)
+);
+
+INSERT INTO systemSettings (settingDescription, settingValue) 
+VALUES('PARKINGPRICEPERHOUR', '12.50');

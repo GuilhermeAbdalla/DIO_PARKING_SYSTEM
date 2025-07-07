@@ -1,6 +1,4 @@
-using System.Data.SqlTypes;
 using MySql.Data.MySqlClient;
-using ParkingSystem.Common;
 
 namespace ParkingSystem
 {
@@ -140,6 +138,99 @@ namespace ParkingSystem
 
         }
 
+        public static bool verifyIfVehicleExistsinBd(int typedVehicleId)
+        {
+            List<Vehicle> vehicles = new List<Vehicle>();
+            string sql = $"SELECT idVehicle FROM vehicle WHERE idVehicle = {typedVehicleId}";
+            bool isValidId = false;
+            try
+            {
+                MySqlCommand command = new MySqlCommand(sql, connection);
+                connection.Open();
+
+                MySqlDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    Vehicle vehicle = new Vehicle();
+
+                    vehicle.idVehicle = reader.GetInt32(0);
+
+                    vehicles.Add(vehicle);
+
+                    if (vehicles[0] != null)
+                    {
+                        isValidId = true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("This ID doesn't exists in Db");
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return isValidId;
+        }
+
+        public static bool verifyIfHasEntry(int typedVehicleId)
+        {
+            string sql = $"SELECT idVehicle FROM entryexit WHERE idVehicle = {typedVehicleId} AND exitTime IS NULL";
+
+            bool hasEntryWithoutExit = true;
+
+            try
+            {
+                MySqlCommand command = new MySqlCommand(sql, connection);
+                connection.Open();
+
+                MySqlDataReader reader = command.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    hasEntryWithoutExit = true;
+                }
+                else
+                {
+                    hasEntryWithoutExit = false;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+
+            return hasEntryWithoutExit;
+        }
+
+        public static void registerEntry(int typedVehicleId)
+        {
+            string sql = $"INSERT INTO entryexit (idVehicle, entryTime) VALUES({typedVehicleId}, CURRENT_TIME())";
+
+            executeQuery(sql);
+        }
+
+        public static void registerExit(int typedVehicleId)
+        {
+            decimal parkingValuePerHour = getParkingValue(typedVehicleId);
+
+            Console.WriteLine($"The Total Price is ${parkingValuePerHour}");
+
+            Console.Write("Press any key to pay");
+            Console.ReadKey();
+
+            string sql = $"UPDATE entryexit SET exitTime = CURRENT_TIME(), totalPrice = {parkingValuePerHour} WHERE idVehicle = {typedVehicleId} AND exitTime IS NULL";
+            executeQuery(sql);
+
+
+        }
+
         static void executeQuery(string sql)
         {
             try
@@ -159,6 +250,74 @@ namespace ParkingSystem
                 connection.Close();
             }
 
+        }
+
+        static decimal getParkingValue(int typedVehicleId)
+        {
+
+            string sqlDateDiff = $"SELECT TIMESTAMPDIFF(HOUR, entryTime, CURRENT_TIME()) as DateDiff FROM entryexit WHERE idVehicle = {typedVehicleId} AND exitTime IS NULL";
+
+            int dateDiff = 0;
+
+            try
+            {
+                MySqlCommand command = new MySqlCommand(sqlDateDiff, connection);
+                connection.Open();
+
+                MySqlDataReader reader = command.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        dateDiff = reader.GetInt32(0);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine("Exception 1");
+            }
+            finally
+            {
+                connection.Close();
+            }
+
+            string sqlPricePerHour = "SELECT settingValue FROM systemsettings WHERE settingDescription = 'PARKINGPRICEPERHOUR'";
+
+            try
+            {
+                MySqlCommand command = new MySqlCommand(sqlPricePerHour, connection);
+                connection.Open();
+
+                MySqlDataReader reader = command.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        return decimal.Parse(reader.GetString(0)) * dateDiff;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine("Exception 2");
+            }
+            finally
+            {
+                connection.Close();
+            }
+
+            return 0;
+        }
+        public static void setSystemSettings(decimal priceValue)
+        {
+            string sql = $"UPDATE systemsettings SET settingvalue = {priceValue} WHERE settingDescription = \'PARKINGPRICEPERHOUR\'";
+
+            executeQuery(sql);
         }
     }
 }
