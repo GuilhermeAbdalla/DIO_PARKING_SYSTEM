@@ -1,2 +1,2 @@
 # DIO_PARKING_SYSTEM
-A simple parking system made using C# with a database in MySql
+A simple parking system made for DIO XP Inc. Bootcamp using C# with MySql Database
